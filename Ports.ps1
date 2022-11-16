@@ -1,8 +1,10 @@
 '''
-In: get-openports -target localhost -lowerport 22 -upperport 80                                                                                                              
-Out:
-Port 22 is open
-Port 80 is open
+Run '. .\Ports.ps1' from the directory Ports.ps1 is located to import the function
+
+In: Get-OpenPorts -Target localhost -Lowerport 22 -Upperport 80                                                                                                              
+
+Out: Port 22 is open
+     Port 80 is open
 '''
 
 function Get-OpenPorts {
