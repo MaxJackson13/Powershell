@@ -11,7 +11,7 @@ Server: Send-EndcodeFile -Target 10.10.10.10 -Port 9001 -Path .\test.txt -Encode
 Client: nc -nvlp 9001 > b64test.txt
 
 '''
-Function Send-EncodedFile () {
+Function Send-File () {
         
         param($Target, $Port, $Path, [bool[]]$Encoded=$false)
        
