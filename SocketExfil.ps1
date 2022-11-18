@@ -21,7 +21,7 @@ Function Send-File () {
             }
         $socket = New-object System.Net.Sockets.TcpClient($Target,$Port)
         $stream = $socket.GetStream()
-        $stream.Write($string, 0 ,$string.Length)
+        $stream.Write($string, 0, $string.Length)
         $stream.close()
         $socket.close()
 }
