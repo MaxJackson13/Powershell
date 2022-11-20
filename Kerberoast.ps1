@@ -18,6 +18,7 @@ Function Get-TGS {
 
 #Example usage: Get-TGS -Events 100
 #Example Output:
+
 ```
 TimeCreated                     Id LevelDisplayName Message                                                            
 -----------                     -- ---------------- -------                                                            
@@ -59,6 +60,9 @@ TimeCreated                     Id LevelDisplayName Message
 
 
    ProviderName: Microsoft-Windows-Security-Auditing
+
+```
+```
 
 TimeCreated                     Id LevelDisplayName Message                                                            
 -----------                     -- ---------------- -------                                                            
