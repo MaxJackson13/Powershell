@@ -1,3 +1,9 @@
+eventid 4678 A Kerberos authentication ticket (TGT) was requested
+result code 0x6	KDC_ERR_C_PRINCIPAL_UNKNOWN if invalid user
+
+eventid 4771 Kerberos pre-authentication failed if valid user invalid pass
+
+
 get-aduser -filter * -searchbase 'DC=SCRM,DC=LOCAL' | select samaccountname 2>&1
 
 samaccountname
