@@ -13,5 +13,6 @@ Invoke-Command -ComputerName $Computer -Credential $Credential -ScriptBlock { $C
 # To base64 encode a file from linux for windows do
 cat file.txt | iconv -f utf8 -t utf16-le > fileb64.txt
 
-# To mount a remote share on the local machine e.g. for transferring files between Linux and Windows VMs create a credential block as in the first 3 lines # of the first command then
-New-PSDrive -PSProvider FileSystem -
+# To mount a remote share on the local machine e.g. for transferring files between Linux and Windows VMs, create a credential block as in the first 3 lines 
+# of the first command then do
+New-PSDrive -PSProvider FileSystem -Root \\10.10.14.43\share -Credential $Credential
