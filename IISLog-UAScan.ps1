@@ -1,7 +1,8 @@
 Function Invoke-LogUserAgentScan {
           # .SYNOPSIS
           # Parses IIS access logs looking for hosts with suspicious user-agent string .e.g nmap, sqlmap etc.
-
+          
+          # .USAGE
           # Example input file:
 
           # #Software: Microsoft Internet Information Services 10.0
