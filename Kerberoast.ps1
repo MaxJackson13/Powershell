@@ -1,9 +1,9 @@
 Function Get-TGS {
-  #.SYNOPSIS
-  #Retrieves events with event ID 4769 (A Kerberos service ticket was requested) from the Windows security log 
-  #which have 'TicketEncryptionType' of RC4-HMAC. This encryption type is commonly requested in Kerberoasting attacks 
-  #where a downgrade from AES encryption allows for easier offline cracking of the service account password 
-  #whose hash is used to encrypt the server portion of the TGS.
+  # .SYNOPSIS
+  # Retrieves events with event ID 4769 (A Kerberos service ticket was requested) from the Windows security log 
+  # which have 'TicketEncryptionType' of RC4-HMAC. This encryption type is commonly requested in Kerberoasting attacks 
+  # where a downgrade from AES encryption allows for easier offline cracking of the service account password 
+  # whose hash is used to encrypt the server portion of the TGS.
   ###################################################################################################################
   
   param([int] $Events)
