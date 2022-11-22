@@ -1,13 +1,12 @@
-function Invoke-Execution {
-        #.SYNOPSIS
-        # Execute powershell commands under the context of another user, given their username and password.
-        # Run '. .\Invoke-Execution.ps1' from the directory in which the ps1 file is located.
-        ###################################################################################################
-        
-        params($Username, $Password, $Command)
-        $SecurePassword = ConvertTo-SecureString $Password -AsPlaintext -Force
-        $Credential = New-Object System.Management.Automation.PSCredential($Username,$SecurePassword)
-        $Computer = hostname
-        $Command = Invoke-Command -ComputerName $Computer -Credential $Credential -ScriptBlock { $Command }
-        Write-Host $Command
-}
+# Commands I frequently use in CTFs collected here so I don't forget the syntax and can quickly copy and paste whenever I need them
+
+# Run commands as another user
+$password = ''
+$SecurePassword = ConvertTo-SecureString  -AsPlaintext -Force
+$Credential = New-Object System.Management.Automation.PSCredential($Username,$SecurePassword)
+$Computer = hostname
+Invoke-Command -ComputerName $Computer -Credential $Credential -ScriptBlock { $Command }
+
+
+[System.Convert]::ToBase64String([IO.File]::ReadAllBytes('$filepath'))
+
