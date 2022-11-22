@@ -1,4 +1,4 @@
-Function IISLog-UAScan {
+Function Invoke-LogUserAgentScan {
           #.Synopsis
           # Parses IIS access logs looking for hosts with suspicious user-agent string .e.g nmap, sqlmap etc.
 
@@ -17,7 +17,14 @@ Function IISLog-UAScan {
           # Host 10.10.14.8 sent 84 requests containing 'nmap' in the User-Agent
 
           ###########################################################################################################
-          param($File, $Include)
+          [CmdletBinding()]
+          param(
+              [(parameterMandatory)]
+              [string]$File, 
+                
+              [(parameterMandatory)]  
+              $Include
+              )
         
           $headers=@((Get-Content -Path $File -TotalCount 4)[3].split(' ') | Where-Object {$_ -ne '#Fields:'})
           $ipindex=[array]::indexof($headers, 'c-ip')
