@@ -71,3 +71,35 @@ Function Get-WmiPersistence {
 
     }
 }
+
+#############################################################################################################################
+
+# *Evil-WinRM* PS C:\Users\Administrator\Documents> get-wmipersistence -namespace root -computername secnotes -credential $cred
+
+# Property            Value
+# --------            -----
+# Path                \\SECNOTES\ROOT\subscription:CommandLineEventConsumer.Name="PentestLab"
+# CommandLineTemplate C:\Windows\System32\pentestlab.exe
+# Namespace           ROOT\subscription
+# Computer            SECNOTES
+# Type                __EventConsumer
+
+
+
+# Property            Value
+# --------            -----
+# Path                \\SECNOTES\ROOT\DEFAULT:CommandLineEventConsumer.Name="Persistence ftw"
+# CommandLineTemplate C:\Temp\nice.exe
+# Namespace           ROOT\DEFAULT
+# Computer            SECNOTES
+# Type                __EventConsumer
+
+
+
+# Property            Value
+# --------            -----
+# Path                \\SECNOTES\ROOT\DEFAULT:CommandLineEventConsumer.Name="PentestLab"
+# CommandLineTemplate C:\Windows\System32\pentestlab.exe
+# Namespace           ROOT\DEFAULT
+# Computer            SECNOTES
+# Type                __EventConsumer
