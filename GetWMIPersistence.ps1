@@ -72,9 +72,14 @@ Function Get-WmiPersistence {
     }
 }
 
+
+#############################################################################################################################
+#
+# EXAMPLE OUTPUT
+#
 #############################################################################################################################
 
-# *Evil-WinRM* PS C:\Users\Administrator\Documents> get-wmipersistence -namespace root -computername secnotes -credential $cred
+# *Evil-WinRM* PS C:\Users\Administrator\Documents> Get-WmiPersistence -NameSpace root -ComputerName secnotes -Credential $cred
 
 # Property            Value
 # --------            -----
