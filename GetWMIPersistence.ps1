@@ -103,3 +103,6 @@ Function Get-WmiPersistence {
 # Namespace           ROOT\DEFAULT
 # Computer            SECNOTES
 # Type                __EventConsumer
+
+
+# *Evil-WinRM* PS C:\Users\Administrator\Documents>
