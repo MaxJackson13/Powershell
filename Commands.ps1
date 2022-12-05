@@ -15,7 +15,7 @@ cat file.txt | iconv -f utf8 -t utf16-le | base64 -w0 > fileb64.txt
 
 # To mount a remote share on the local machine e.g. for transferring files between Linux and Windows VMs, create a credential block as in the first 3 lines 
 # of the first command then do
-New-PSDrive -PSProvider FileSystem -Root \\10.10.14.43\share -Credential $Credential
+New-PSDrive -PSProvider FileSystem -Root \\10.10.14.x\share -Credential $Credential
 
 #Recursively search for matching files
 Get-ChildItem -Force -Recurse -Path C:\ -Include *.txt -ErrorAction SilentlyContinue
