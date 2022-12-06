@@ -1,14 +1,25 @@
-Function Get-TGS {
-  # .SYNOPSIS
-  # Retrieves events with event ID 4769 (A Kerberos service ticket was requested) from the Windows security log 
-  # which have 'TicketEncryptionType' of RC4-HMAC. This encryption type is commonly requested in Kerberoasting attacks 
-  # where a downgrade from AES encryption allows for easier offline cracking of the service account password 
-  # whose hash is used to encrypt the server portion of the TGS.
-  ###################################################################################################################
+Function Get-TGSDowngrade {
+  <#
+        .SYSNOPSIS
+            Retrieves events with event ID 4769 (A Kerberos service ticket was requested) from the Windows security log 
+            which have 'TicketEncryptionType' of RC4-HMAC. This encryption type is commonly requested in Kerberoasting attacks 
+            where a downgrade from AES encryption allows for easier offline cracking of the service account password 
+            whose hash is used to encrypt the server portion of the TGS.
+        
+        .PARAMETER Events
+            Maximum number of events to search on
+        
+        .EXAMPLE
+            Get-TGSDowngrade
+            
+            Description
+            -----------
+            Lists security event logs with EID 4769 and ecnryption type 0x17 (RC4-HMAC)
+  #>
+
+  param([int]$Events)
   
-  param([int] $Events)
-  
-  $Logs=Get-WinEvent -FilterHashtable @{LogName='security'; id=4769} -MaxEvent $Events
+  $Logs = Get-WinEvent -FilterHashtable @{LogName='security'; id=4769} -MaxEvent $Events
 
   ForEach ($Record in $Logs) {
       $Evt=[xml]$Record.toXml()
@@ -18,7 +29,7 @@ Function Get-TGS {
   }
 }
 
-#Example usage: Get-TGS -Events 100
+#Example usage: Get-TGSDowngrade -Events 100
 
 #Example Output:
 
