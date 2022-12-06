@@ -1,3 +1,4 @@
+# IN PROGRESS
 # The Windows security event log ID 4771 corresponds to a Kerberos preauthentication failure. Failure code 0x18 means the pre-authentication information   # provided was invalid, the most likely cause for this being a wrong password was supplied. In a password spray attackers will try common passwords, or     # passwords they've found which they know are used in the domain (e.g. default logon passwords) against many valid users accounts. Therefore, in the logs   # there'll be many authentication failures against different accounts originating from a single source IP. This script retrieves 4771 events from the log
 # and groups them by source ip. It runs through the events and looks for three failures within 1800 seconds (30 minutes).
 
