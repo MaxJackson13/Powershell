@@ -19,7 +19,7 @@ Function Get-TGSDowngrade {
 
   param([int]$Events)
   
-  $Logs = Get-WinEvent -FilterHashtable @{LogName='security'; id=4769} -MaxEvent $Events
+  $Logs = Get-WinEvent -FilterHashtable @{LogName='security'; Id=4769} -MaxEvent $Events
 
   ForEach ($Record in $Logs) {
       $Evt=[xml]$Record.toXml()
