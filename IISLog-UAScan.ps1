@@ -7,7 +7,8 @@ Function Invoke-UserAgentScan {
         .PARAMETER Include
             String to search for
         .EXAMPLE
-        
+            PS C:\ type C:\inetpub\logs\LogFiles\iis.log
+            
             Software: Microsoft Internet Information Services 10.0
             Version: 1.0
             Date: 2022-11-18 02:27:21
