@@ -4,7 +4,7 @@ Function Find-PsExec {
             Search for unsigned executables in %SYSTEMROOT% which are also a service executable .
           
          .DESCRIPTION
-            Impacket's psexec.py drops an executable in the ADMIN$ share which is mapped to the %SYSTEMROOT% environment variable then
+            Impacket's psexec.py drops an executable in the ADMIN$ share which is mapped to the %SYSTEMROOT% environment variable. It then
             creates and starts a service to run the executable. This script looks for suspicious binaries and checks the registry to see
             if they're registered as a service executable. It also correlates events from the security log with the executable's creation time.
         
