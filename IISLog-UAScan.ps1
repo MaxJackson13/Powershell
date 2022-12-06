@@ -22,23 +22,22 @@ Function Invoke-LogUserAgentScan {
           param(
               [(parameterMandatory)]
               [string]$File, 
-                
               [(parameterMandatory)]  
               $Include
               )
         
-          $headers=@((Get-Content -Path $File -TotalCount 4)[3].split(' ') | Where-Object {$_ -ne '#Fields:'})
-          $ipindex=[array]::indexof($headers, 'c-ip')
-          $nmap=(Get-Content -Path $File | Select-String $Include)
+          $Headers = @((Get-Content -Path $File -TotalCount 4)[3].split(' ') | Where-Object {$_ -ne '#Fields:'})
+          $IpIndex = [Array]::IndexOf($headers, 'c-ip')
+          $Lines = (Get-Content -Path $File | Select-String $Include)
 
-          $arr=@()
-          foreach ($i in $nmap){
-            $arr+=$i.toString().split(' ')[$ipindex]
+          $Arr = @()
+          ForEach ($Line in $Lines){
+            $Arr+=$Line.toString().split(' ')[$IpIndex]
           }
         
-          if (!$arr) {Write-Host "No entries were found with $($Include) in the User-Agent"}
+          if (-not $Arr) {Write-Host "No entries were found with $($Entry) in the User-Agent"}
           else {
-                $group=($arr | Group-Object -NoElement)
-                $group | ForEach-Object {Write-Host "Host $($_.Name) sent $($_.Count) requests containing $($Include) in the User-Agent"}                                     >
+                $Group = ($Arr | Group-Object -NoElement)
+                $Group | ForEach-Object {Write-Host "Host $($_.Name) sent $($_.Count) requests containing $($Include) in the User-Agent"}                                     >
           }
 }
