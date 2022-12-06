@@ -1,5 +1,4 @@
 Function Find-PsExec {
-Function Find-PsExec {
     [cmdletbinding()]
     Param (
         [parameter()]
@@ -31,7 +30,7 @@ Function Find-PsExec {
                 $CreatedAt = $Exe.CreationTime
                 $Before = $CreatedAt.AddSeconds(5)
                 $After = $CreatedAt.AddSeconds(-5)
-                $Logs = Get-EventLog -Logname Security -After $After -Before $Before -ErrorAction Ignore
+                Get-Winevent -FilterHashtable @{LogName='security'; Id=4624; StartTime=$after; EndTime=$before} -ErrorAction Ignore
                 
     }
 
