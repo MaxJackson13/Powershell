@@ -66,18 +66,14 @@ Function Get-WmiPersistence {
                             Computer = $_.PSComputerName
                             CommandLineTemplate = $_.CommandLineTemplate
                             Path = $_.__PATH
+                            CreatorSid = (New-Object System.Security.Principal.SecurityIdentifier($_.CreatorSid, 0)).toString()
                     } | Format-Table @{ N = 'Property'; E = { $_.Name } }, @{ N = 'Value'; E = { $_.Value } } -Wrap
             }
 
     }
 }
 
-
-#############################################################################################################################
-#
-# EXAMPLE OUTPUT
-#
-#############################################################################################################################
+# Example Usage
 
 # *Evil-WinRM* PS C:\Users\Administrator\Documents> Get-WmiPersistence -NameSpace root -ComputerName secnotes -Credential $cred
 
@@ -88,6 +84,7 @@ Function Get-WmiPersistence {
 # Namespace           ROOT\subscription
 # Computer            SECNOTES
 # Type                __EventConsumer
+# CreatorSid          S-1-5-21-1791094074-1363918840-4199337083-500
 
 
 
@@ -98,6 +95,7 @@ Function Get-WmiPersistence {
 # Namespace           ROOT\DEFAULT
 # Computer            SECNOTES
 # Type                __EventConsumer
+# CreatorSid          S-1-5-21-1791094074-1363918840-4199337083-500
 
 
 
@@ -108,6 +106,7 @@ Function Get-WmiPersistence {
 # Namespace           ROOT\DEFAULT
 # Computer            SECNOTES
 # Type                __EventConsumer
+# CreatorSid          S-1-5-21-1791094074-1363918840-4199337083-500
 
 
 # *Evil-WinRM* PS C:\Users\Administrator\Documents>
