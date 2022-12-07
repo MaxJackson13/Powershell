@@ -24,7 +24,7 @@ Function Find-PsExec {
             Description
             -----------
             Query the security log for EIDs 4624 (logon session created) and 4672 (special privileges assigned to logon) 
-            close to the time of the executable's creation.
+            and the system log for EID 7045 (service created), close to the time of the executable's creation.
     #>
     [cmdletbinding()]
     Param (
@@ -62,9 +62,12 @@ Function Find-PsExec {
                 $CreatedAt = $Exe.CreationTime
                 $Before = $CreatedAt.AddSeconds(5)
                 $After = $CreatedAt.AddSeconds(-5)
-                $Logs = Get-Winevent -FilterHashtable @{LogName='security'; Id=4624,4672; StartTime=$after; EndTime=$before} -ErrorAction Ignore
-                $Logs | ForEach-Object {
-                            $Event = ([xml]($_).ToXml()).event.eventdata.data | Where-Object {
+          
+                $SecLogs = Get-Winevent -FilterHashtable @{LogName='security'; Id=4624,4672; StartTime=$After; EndTime=$Before} -ErrorAction Ignore
+                $SysLogs = Get-Winevent -FilterHashtable @{LogName='system'; Id=7045; StartTime=$After; EndTime=$Before} -ErrorAction Ignore 
+          
+                $SecLogs | ForEach-Object {
+                                $Event = ([xml]($_).ToXml()).event.eventdata.data | Where-Object {
                                                                                     $_.Name -in
                                                                                     @(
                                                                                     'SubjectUserSid',
@@ -75,13 +78,20 @@ Function Find-PsExec {
                                                                                     'TargetDomainName',
                                                                                     'IpAddress'
                                                                                     )
-                                                                                }
+                                                                            }
 
-                              (@(
-                              [pscustomobject]@{Name='TimeCreated'; '#text'=$_.timecreated}
-                              [pscustomobject]@{Name='Id'; '#text'=$_.id}
-                              ) + $Event | Select @{N='Property'; E='Name'}, @{N='Value'; E='#text'} | Out-String).Trim()+"`n`n"
-                        }
+                                (@(
+                                [pscustomobject]@{Name='TimeCreated'; '#text'=$_.TimeCreated}
+                                [pscustomobject]@{Name='Id'; '#text'=$_.Id}
+                                ) + $Event | Select @{N='Property'; E='Name'}, @{N='Value'; E='#text'} | Out-String).Trim()+"`n`n"
+                           }
+
+                $SysLogs | Foreach-Object {
+                                @(
+                                [pscustomobject]@{Property='TimeCreated'; Value=$_.TimeCreated}
+                                [pscustomobject]@{Property='Id'; Value=$_.Id} 
+                                [pscustomobject]@{Property='Message'; Value=$_.Message}) | Format-Table -Wrap 
+                           }
             }
         }
     }
@@ -141,6 +151,18 @@ Function Find-PsExec {
 # SubjectUserSid    S-1-5-21-1791094074-1363918840-4199337083-500
 # SubjectUserName   Administrator
 # SubjectDomainName SECNOTES
+
+# Property    Value
+# --------    -----
+# TimeCreated 12/6/2022 4:47:37 AM
+# Id          7045
+# Message     A service was installed in the system.
+
+#             Service Name:  kUza
+#             Service File Name:  %systemroot%\FDqKZPgQ.exe
+#             Service Type:  user mode service
+#             Service Start Type:  demand start
+#             Service Account:  LocalSystem
 
 # Property          Value
 # --------          -----
