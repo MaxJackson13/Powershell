@@ -54,7 +54,6 @@ Function Find-PsExec {
     }
 
     if ($GetLogs) {
-
         Write-Host "`n[+] Enumerating Log Entries`n" -ForegroundColor Cyan
 
         ForEach ($Exe in $Unsigned) {
