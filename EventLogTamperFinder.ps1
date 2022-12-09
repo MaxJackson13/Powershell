@@ -104,7 +104,7 @@ Function Invoke-OutboundFireWallCheck() {
 $EventLogNames | ForEach-Object { Get-MaxTimeBetweenEvents -LogName $_ } | 
                  Format-List EventLogName,
                              @{Name='MostRecentEvent';Expression={$_.MostRecentEvent.TimeCreated}},
-                             @{Name='TimeSinceLastEvent';E={((Get-Date) -$_.MostRecentEvent.TimeCreated).ToString("dd'd 'hh'h 'mm'm 'ss's'")}},
+                             @{Name='TimeSinceLastEvent';Expression={((Get-Date) -$_.MostRecentEvent.TimeCreated).ToString("dd'd 'hh'h 'mm'm 'ss's'")}},
                              @{Name='MaxTimeBetweenEvents';Expression={$_.MaxTime}}
 
 #$w
