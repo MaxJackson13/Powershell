@@ -1,3 +1,9 @@
+$EventLogNames = @('security','system','application')
+$Pwsh = Get-WinEvent -ListLog 'windows powershell'
+if ($Pwsh -ne $null) {
+    $EventLogNames += 'windows powershell'
+}
+
 Function Invoke-wevtutilCheck() {
     param(
     [Parameter(mandatory)]
@@ -41,12 +47,6 @@ Function Format-CimDate() {
     [System.Management.ManagementDateTimeConverter]::ToDateTime($Date)
 }
 
-$EventLogNames = @('security','system','application')
-$Pwsh = Get-WinEvent -ListLog 'windows powershell'
-if ($Pwsh -ne $null) {
-    $EventLogNames += 'windows powershell'
-}
-
 Function Invoke-EventLogCheck() {
     param(
     [Parameter(mandatory)]
@@ -65,27 +65,6 @@ Function Invoke-EventLogCheck() {
     return $s                                                            
 }
 
-Function Get-TimeDiff() {
-     param(
-     [string]$Log
-     )
-     $l=get-winevent -filterhashtable @{logname='security'} -max 100
-     $max=0
-     $j=0
-     for ($i=0;$i -lt ($l.length-1); $i++) {
-             $diff=($l[$i].timecreated-$l[$i+1].timecreated).ToString("dd' days 'hh' hours 'mm' minutes 'ss' seconds'")
-             if ($diff -gt $max) {
-                     $j=$i
-                     $max=$diff
-             }
-     }
-    return $max,$l[$j],$l[$j+1]
-
-$t=$LogNames | ForEach-Object {Get-WinEvent -LogName $_ -MaxEvents 1} | Select-Object LogName,
-                                                                                      @{Name='LastEventRecorded';E={$_.TimeCreated}},
-                                                                                      @{Name='TimeDelta';E={((Get-Date) -$_.TimeCreated).ToString("dd' days 'hh' hours 'mm' minutes 'ss' seconds'")}}
-
-
 Function Invoke-OutboundFireWallCheck() {
     $Rules = Get-NetFirewallRule -Action Block -Direction Outbound | Select-Object Name,DisplayName,Enabled,Direction,Action
     $out = $Rules | ForEach-Object {
@@ -98,6 +77,32 @@ Function Invoke-OutboundFireWallCheck() {
                     }
      return $out              
  }
+ 
+ Function Get-MaxTimeBetweenEvents() {
+     param(
+     [string]$LogName='security'
+     )
+        $Events = Get-WinEvent -FilterHashTable @{LogName=$LogName} -MaxEvents 200
+        $First = $Events[0]
+        $Max = 0
+        $j = 0
+        for ($i=0; $i -lt ($Events.length-1); $i++) {
+                $Diff = ($Events[$i].TimeCreated-$Events[$i+1].TimeCreated).ToString("dd'd 'hh'h 'mm'm 'ss's'")
+                if ($Diff -gt $Max) {
+                        $j = $i
+                        $Max = $Diff
+                }
+        }
+    return [pscustomobject]@{EventLogName=$LogName; MostRecentEvent=$First; MaxTime=$Max; Event=$Events[$j]; NextEvent=$Events[$j+1]}
+}
+
+$EventLogNames | ForEach-Object {
+                        Get-MaxTimeBetweenEvents -LogName $_
+                 } | Format-List EventLogName,
+                                 @{Name='MostRecentEvent';Expression={$_.MostRecentEvent.TimeCreated}},
+                                 @{Name='TimeSinceLastEvent';E={((Get-Date) -$_.MostRecentEvent.TimeCreated).ToString("dd'd 'hh'h 'mm'm 'ss's'")}},
+                                 @{Name='MaxTimeBetweenEvents';Expression={$_.MaxTime}}
+
 #$w
 write-host "[+] Evaluating the event log service"
 
