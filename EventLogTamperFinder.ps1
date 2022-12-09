@@ -6,30 +6,27 @@ if ($Pwsh -ne $null) {
 
 Function Invoke-wevtutilCheck() {
     param(
-    [Parameter(mandatory)]
     [System.IO.FileInfo]$Path=$env:SYSTEMROOT
     )
-    $w = Get-ChildItem -Recurse -Path $Path -Include wevtutil.exe -ErrorAction SilentlyContinue | 
-                Get-ItemProperty | 
+    $a = Get-ChildItem -Recurse -Path $Path -Include wevtutil.exe -ErrorAction SilentlyContinue | 
                         Select FullName,LastAccessTime | 
                                 Sort LastAccessTime
-    return $w
+    return $a
 }
 Function Invoke-EventLogServiceCheck() {
     
     $ServiceDll = Get-ItemPropertyValue HKLM:\System\CurrentControlSet\Services\Eventlog ServiceDll
     $Signature = (Get-AuthenticodeSignature $ServiceDll).Status
-    
     $Status = (Get-Service EventLog).Status
     
-    $e = Get-WmiObject win32_service | Where-object {$_.Name -like '*eventlog*'} |
+    $b = Get-WmiObject win32_service | Where-object {$_.Name -like '*eventlog*'} |
                                               Select-Object @{Name='Name';Expression={$_.Caption}},
                                                             @{Name='Status';Expression={$_.Status,$Status}},
                                                             @{Name='Command Line';Expression={$_.PathName}},
                                                             StartMode,
                                                             @{Name='Service Executable';Expression={$ServiceDll}},
                                                             @{Name='ServiceDll Signature';Expression={$Signature}}
-    return $e                                                     
+    return $b                                                     
 }
 
 Function Format-FileSize() {
@@ -43,16 +40,17 @@ Function Format-FileSize() {
 }
 
 Function Format-CimDate() {
-    Param ([string]$Date)
+    Param (
+    [string]$Date
+    )
     [System.Management.ManagementDateTimeConverter]::ToDateTime($Date)
 }
 
 Function Invoke-EventLogCheck() {
     param(
-    [Parameter(mandatory)]
     [string]$LogNames=$EventLogNames
     )
-    $s=Get-WmiObject -Class Win32_NTEventLogFile| Where-Object {$_.LogFileName -in $LogNames} |
+    $c = Get-WmiObject -Class Win32_NTEventLogFile | Where-Object {$_.LogFileName -in $LogNames} |
                                                   Select-Object LogFileName, Name, NumberOfRecords,
                                                                 @{Name='LastAccessed';Expression={Format-CimDate($_.LastAccessed)}},
                                                                 @{Name='LastModified';Expression={Format-CimDate($_.LastModified)}}, 
@@ -62,25 +60,29 @@ Function Invoke-EventLogCheck() {
                                                                 Compressed,
                                                                 Encrypted,
                                                                 OverWritePolicy
-    return $s                                                            
+    return $c                                                            
 }
 
 Function Invoke-OutboundFireWallCheck() {
     $Rules = Get-NetFirewallRule -Action Block -Direction Outbound | Select-Object Name,DisplayName,Enabled,Direction,Action
-    $out = $Rules | ForEach-Object {
-                             $Rule = $_
-                             $Reg = Get-ItemPropertyValue HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules $Rule.Name
-                             $Reg | Where-Object {$_  -Match 'RPort=(?<RPort>\d+)'} | ForEach-Object {
-                                                                                                      $Rule | Add-Member -MemberType NoteProperty -Name 'RemotePort' -Value $Matches.RPort
-                                                                                                      $Rule
-                                                                                      }
+    $d = $Rules | 
+                  ForEach-Object {
+                        $Rule = $_
+                        $Reg = Get-ItemPropertyValue HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules $Rule.Name
+                        $Reg |
+                             Where-Object {$_  -Match 'RPort=(?<RPort>\d+)'} | 
+                                                                             ForEach-Object {
+                                                                                    $Rule | Add-Member -MemberType NoteProperty -Name 'RemotePort' -Value $Matches.RPort
+                                                                                    $Rule
+                                                                             }
                     }
-     return $out              
+     return $d              
  }
  
  Function Get-MaxTimeBetweenEvents() {
      param(
-     [string]$LogName='security'
+     parameter(Mandatory)
+     [string]$LogName
      )
         $Events = Get-WinEvent -FilterHashTable @{LogName=$LogName} -MaxEvents 200
         $First = $Events[0]
@@ -96,8 +98,7 @@ Function Invoke-OutboundFireWallCheck() {
     return [pscustomobject]@{EventLogName=$LogName; MostRecentEvent=$First; MaxTime=$Max; Event=$Events[$j]; NextEvent=$Events[$j+1]}
 }
 
-$EventLogNames | ForEach-Object {
-                        Get-MaxTimeBetweenEvents -LogName $_
+$EventLogNames | ForEach-Object { Get-MaxTimeBetweenEvents -LogName $_
                  } | Format-List EventLogName,
                                  @{Name='MostRecentEvent';Expression={$_.MostRecentEvent.TimeCreated}},
                                  @{Name='TimeSinceLastEvent';E={((Get-Date) -$_.MostRecentEvent.TimeCreated).ToString("dd'd 'hh'h 'mm'm 'ss's'")}},
