@@ -1,5 +1,14 @@
-$w=Get-ChildItem -Recurse -Path C:\Windows -Include wevtutil.exe -ErrorAction SilentlyContinue | Get-ItemProperty | Select FullName,LastAccessTime | Sort LastAccessTime
-
+Function Invoke-wevtutilCheck() {
+    param(
+    [Parameter(mandatory)]
+    [System.IO.FileInfo]$Path=$env:SYSTEMROOT
+    )
+    $w = Get-ChildItem -Recurse -Path $Path -Include wevtutil.exe -ErrorAction SilentlyContinue | 
+                Get-ItemProperty | 
+                        Select FullName,LastAccessTime | 
+                                Sort LastAccessTime
+    return $w
+}
 Function Invoke-EventLogServiceCheck() {
     
     $ServiceDll = Get-ItemPropertyValue HKLM:\System\CurrentControlSet\Services\Eventlog ServiceDll
@@ -35,12 +44,12 @@ Function Format-CimDate() {
 $EventLogNames = @('security','system','application')
 $Pwsh = Get-WinEvent -ListLog 'windows powershell'
 if ($Pwsh -ne $null) {
-    $EventLogNames+='windows powershell'
+    $EventLogNames += 'windows powershell'
 }
 
 Function Invoke-EventLogCheck() {
     param(
-    [Parameter(Position=0,mandatory=$true)]
+    [Parameter(mandatory)]
     [string]$LogNames=$EventLogNames
     )
     $s=Get-WmiObject -Class Win32_NTEventLogFile| Where-Object {$_.LogFileName -in $LogNames} |
@@ -56,20 +65,38 @@ Function Invoke-EventLogCheck() {
     return $s                                                            
 }
 
+Function Get-TimeDiff() {
+     param(
+     [string]$Log
+     )
+     $l=get-winevent -filterhashtable @{logname='security'} -max 100
+     $max=0
+     $j=0
+     for ($i=0;$i -lt ($l.length-1); $i++) {
+             $diff=($l[$i].timecreated-$l[$i+1].timecreated).ToString("dd' days 'hh' hours 'mm' minutes 'ss' seconds'")
+             if ($diff -gt $max) {
+                     $j=$i
+                     $max=$diff
+             }
+     }
+    return $max,$l[$j],$l[$j+1]
+
 $t=$LogNames | ForEach-Object {Get-WinEvent -LogName $_ -MaxEvents 1} | Select-Object LogName,
                                                                                       @{Name='LastEventRecorded';E={$_.TimeCreated}},
                                                                                       @{Name='TimeDelta';E={((Get-Date) -$_.TimeCreated).ToString("dd' days 'hh' hours 'mm' minutes 'ss' seconds'")}}
 
+
 Function Invoke-OutboundFireWallCheck() {
-    $Rules=Get-NetFirewallRule -Action Block -Direction Outbound | Select-Object Name,DisplayName,Enabled,Direction,Action
-    $out=$Rules | ForEach-Object {
+    $Rules = Get-NetFirewallRule -Action Block -Direction Outbound | Select-Object Name,DisplayName,Enabled,Direction,Action
+    $out = $Rules | ForEach-Object {
                              $Rule = $_
                              $Reg = Get-ItemPropertyValue HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules $Rule.Name
                              $Reg | Where-Object {$_  -Match 'RPort=(?<RPort>\d+)'} | ForEach-Object {
                                                                                                       $Rule | Add-Member -MemberType NoteProperty -Name 'RemotePort' -Value $Matches.RPort
                                                                                                       $Rule
                                                                                       }
-                  }
+                    }
+     return $out              
  }
 #$w
 write-host "[+] Evaluating the event log service"
