@@ -1,6 +1,6 @@
 $EventLogNames = @('security','system','application')
 $Pwsh = Get-WinEvent -ListLog 'windows powershell'
-if ($Pwsh -ne $null) {
+If ($Pwsh -ne $null) {
     $EventLogNames += 'windows powershell'
 }
 
@@ -20,12 +20,12 @@ Function Invoke-EventLogServiceCheck() {
     $Status = (Get-Service EventLog).Status
     
     $b = Get-WmiObject win32_service | Where-object {$_.Name -like '*eventlog*'} |
-                                              Select-Object @{Name='Name';Expression={$_.Caption}},
-                                                            @{Name='Status';Expression={$_.Status,$Status}},
-                                                            @{Name='Command Line';Expression={$_.PathName}},
-                                                            StartMode,
-                                                            @{Name='Service Executable';Expression={$ServiceDll}},
-                                                            @{Name='ServiceDll Signature';Expression={$Signature}}
+                                       Select-Object @{Name='Name';Expression={$_.Caption}},
+                                                     @{Name='Status';Expression={$_.Status,$Status}},
+                                                     @{Name='Command Line';Expression={$_.PathName}},
+                                                     StartMode,
+                                                     @{Name='Service Executable';Expression={$ServiceDll}},
+                                                     @{Name='ServiceDll Signature';Expression={$Signature}}
     return $b                                                     
 }
 
@@ -50,32 +50,35 @@ Function Invoke-EventLogCheck() {
     param(
     [string]$LogNames=$EventLogNames
     )
-    $c = Get-WmiObject -Class Win32_NTEventLogFile | Where-Object {$_.LogFileName -in $LogNames} |
-                                                  Select-Object LogFileName, Name, NumberOfRecords,
-                                                                @{Name='LastAccessed';Expression={Format-CimDate($_.LastAccessed)}},
-                                                                @{Name='LastModified';Expression={Format-CimDate($_.LastModified)}}, 
-                                                                @{Name='FileSize';Expression={Format-FileSize($_.FileSize)}}, 
-                                                                @{Name='MaxFileSize';Expression={Format-FileSize($_.MaxFileSize)}},
-                                                                Archive,
-                                                                Compressed,
-                                                                Encrypted,
-                                                                OverWritePolicy
+    $c = Get-WmiObject -Class Win32_NTEventLogFile | 
+    Where-Object {$_.LogFileName -in $LogNames} |
+    Select-Object LogFileName, 
+                  Name, 
+                  NumberOfRecords,
+                  @{Name='LastAccessed';Expression={Format-CimDate($_.LastAccessed)}},
+                  @{Name='LastModified';Expression={Format-CimDate($_.LastModified)}}, 
+                  @{Name='FileSize';Expression={Format-FileSize($_.FileSize)}}, 
+                  @{Name='MaxFileSize';Expression={Format-FileSize($_.MaxFileSize)}},
+                  Archive,
+                  Compressed,
+                  Encrypted,
+                  OverWritePolicy
     return $c                                                            
 }
 
 Function Invoke-OutboundFireWallCheck() {
     $Rules = Get-NetFirewallRule -Action Block -Direction Outbound | Select-Object Name,DisplayName,Enabled,Direction,Action
     $d = $Rules | 
-                  ForEach-Object {
-                        $Rule = $_
-                        $Reg = Get-ItemPropertyValue HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules $Rule.Name
-                        $Reg |
-                             Where-Object {$_  -Match 'RPort=(?<RPort>\d+)'} | 
-                                                                             ForEach-Object {
-                                                                                    $Rule | Add-Member -MemberType NoteProperty -Name 'RemotePort' -Value $Matches.RPort
-                                                                                    $Rule
-                                                                             }
-                    }
+    ForEach-Object {
+             $Rule = $_
+             $Reg = Get-ItemPropertyValue HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules $Rule.Name
+             $Reg |
+             Where-Object {$_  -Match 'RPort=(?<RPort>\d+)'} | 
+             ForEach-Object {
+                      $Rule | Add-Member -MemberType NoteProperty -Name 'RemotePort' -Value $Matches.RPort
+                      $Rule
+             }
+     }
      return $d              
  }
  
@@ -84,25 +87,25 @@ Function Invoke-OutboundFireWallCheck() {
      parameter(Mandatory)
      [string]$LogName
      )
-        $Events = Get-WinEvent -FilterHashTable @{LogName=$LogName} -MaxEvents 200
-        $First = $Events[0]
-        $Max = 0
-        $j = 0
-        for ($i=0; $i -lt ($Events.length-1); $i++) {
-                $Diff = ($Events[$i].TimeCreated-$Events[$i+1].TimeCreated).ToString("dd'd 'hh'h 'mm'm 'ss's'")
-                if ($Diff -gt $Max) {
-                        $j = $i
-                        $Max = $Diff
-                }
-        }
-    return [pscustomobject]@{EventLogName=$LogName; MostRecentEvent=$First; MaxTime=$Max; Event=$Events[$j]; NextEvent=$Events[$j+1]}
+     $Events = Get-WinEvent -FilterHashTable @{LogName=$LogName} -MaxEvents 200
+     $First = $Events[0]
+     $MaxDiff = 0
+     $j = 0
+     For ($i=0; $i -lt ($Events.length-1); $i++) {
+             $Diff = ($Events[$i].TimeCreated-$Events[$i+1].TimeCreated).ToString("dd'd 'hh'h 'mm'm 'ss's'")
+             If ($Diff -gt $Max) {
+                     $j = $i
+                     $MaxDiff = $Diff
+             }
+     }
+     return [pscustomobject]@{EventLogName=$LogName; MostRecentEvent=$First; MaxTime=$MaxDiff; Event=$Events[$j]; NextEvent=$Events[$j+1]}
 }
 
-$EventLogNames | ForEach-Object { Get-MaxTimeBetweenEvents -LogName $_
-                 } | Format-List EventLogName,
-                                 @{Name='MostRecentEvent';Expression={$_.MostRecentEvent.TimeCreated}},
-                                 @{Name='TimeSinceLastEvent';E={((Get-Date) -$_.MostRecentEvent.TimeCreated).ToString("dd'd 'hh'h 'mm'm 'ss's'")}},
-                                 @{Name='MaxTimeBetweenEvents';Expression={$_.MaxTime}}
+$EventLogNames | ForEach-Object { Get-MaxTimeBetweenEvents -LogName $_ } | 
+                 Format-List EventLogName,
+                             @{Name='MostRecentEvent';Expression={$_.MostRecentEvent.TimeCreated}},
+                             @{Name='TimeSinceLastEvent';E={((Get-Date) -$_.MostRecentEvent.TimeCreated).ToString("dd'd 'hh'h 'mm'm 'ss's'")}},
+                             @{Name='MaxTimeBetweenEvents';Expression={$_.MaxTime}}
 
 #$w
 write-host "[+] Evaluating the event log service"
