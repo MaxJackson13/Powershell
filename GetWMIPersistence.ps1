@@ -23,7 +23,8 @@ Function Get-WmiNamespace {
         [parameter()]
         [System.Management.Automation.Credential()]$Credential = [System.Management.Automation.PSCredential]::Empty
     )
-    Get-WmiObject -NameSpace $Namespace -Class __NAMESPACE -ComputerName $Computername | ForEach-Object {
+    Get-WmiObject -NameSpace $Namespace -Class __NAMESPACE -ComputerName $Computername | 
+    ForEach-Object {
             ($ns = "$($_.__NAMESPACE)\$($_.Name)")
             Get-WmiNamespace -NameSpace $ns
     }
@@ -32,18 +33,13 @@ Function Get-WmiNamespace {
 Function Get-WmiPersistence {
     <#
         .SYSNOPSIS
-            Queries all WMI namespaces for event consumers with a 'CommandLineTemplate' attribute
+            Returns information on eventfilters, eventconsumers and associated bindings related to 'activescript' or 'commandline' event consumers
         .PARAMETER Computername
             Computername to perform query on
         .PARAMETER Namespace
             Namespace to use to query for additional namespaces
         .PARAMETER Credential
             Optional credentials for remote systems
-        .EXAMPLE
-            Get-WmiPersistence
-            Description
-            -----------
-            Returns information on event consumers with a 'CommandLineTemplate' attribute
     #>
     [cmdletbinding()]
     Param (
@@ -54,59 +50,74 @@ Function Get-WmiPersistence {
         [parameter()]
         [System.Management.Automation.Credential()]$Credential = [System.Management.Automation.PSCredential]::Empty
     )
-    $Namespaces = Get-WmiNamespace -NameSpace $Namespace -ComputerName $Computername -Credential $Credential
+    $NameSpaces = Get-WmiNamespace -NameSpace $Namespace -ComputerName $Computername -Credential $Credential
 
-    $Namespaces | ForEach-Object {
-            $Namespace = Get-WmiObject -Namespace $_ -Class __EventConsumer
-            $EventConsumer = ( $Namespace | Where-Object { $_.CommandLineTemplate -ne $null } )
-            $EventConsumer | ForEach-Object {
-                    @{
-                            Type = $_.__SUPERCLASS
-                            Namespace = $_.__NAMESPACE
-                            Computer = $_.PSComputerName
-                            CommandLineTemplate = $_.CommandLineTemplate
-                            Path = $_.__PATH
-                            CreatorSid = (New-Object System.Security.Principal.SecurityIdentifier($_.CreatorSid, 0)).toString()
-                    } | Format-Table @{ N = 'Property'; E = { $_.Name } }, @{ N = 'Value'; E = { $_.Value } } -Wrap
+    $NameSpaces |
+    ForEach-Object {
+            $NameSpace = $_
+            Get-WmiObject -NameSpace $NameSpace -Class __FilterToConsumerBinding
+    } |
+    Where-Object {$_.Consumer -Match '^(CommandLine|ActiveScript)'} |
+            ForEach-Object {
+                    $Binding = $_
+                    $Consumer = Get-WmiObject -NameSpace $NameSpace -Class __EventConsumer | Where-Object {$_.__RELPATH -eq $Binding.Consumer}
+                    $Filter = Get-WmiObject -NameSpace $NameSpace -Class __EventFilter | Where-Object {$_.__RELPATH -eq $Binding.Filter}
+
+                    [PSCustomObject]@{
+                    Type = $Consumer.__SUPERCLASS
+                    Name = $Consumer.__RELPATH
+                    Namespace = $Consumer.__NAMESPACE
+                    ExecutablePath = $Consumer.ExecutablePath
+                    CommandLineTemplate = $Consumer.CommandLineTemplate
+                    ComputerName = $Consumer.PSComputerName
+                    CreatorSid = (New-Object System.Security.Principal.SecurityIdentifier($Consumer.CreatorSid, 0)).toString()
+                    }
+
+                    [PSCustomObject]@{
+                    Type = $Filter.__CLASS
+                    Name = $filter.__RELPATH
+                    Namespace = $Filter.__NAMESPACE
+                    Query = $Filter.Query
+                    ComputerName = $Filter.PSComputerName
+                    CreatorSid = (New-Object System.Security.Principal.SecurityIdentifier($Filter.CreatorSid, 0)).toString()
+                    }
+
+                    [PSCustomObject]@{
+                    Type = $Binding.__CLASS
+                    Namespace = $Binding.__NAMESPACE
+                    Consumer = $Binding.Consumer
+                    Filter = $Binding.Filter
+                    ComputerName = $Binding.PSComputerName
+                    CreatorSid = (New-Object System.Security.Principal.SecurityIdentifier($Binding.CreatorSid, 0)).toString()
+                    }
             }
-
-    }
 }
+
 
 # Example Usage
 
-# *Evil-WinRM* PS C:\Users\Administrator\Documents> Get-WmiPersistence -NameSpace root -ComputerName secnotes -Credential $cred
+# PS C:\Users\Administrator\Documents> get-wmipersistence
 
-# Property            Value
-# --------            -----
-# Path                \\SECNOTES\ROOT\subscription:CommandLineEventConsumer.Name="PentestLab"
-# CommandLineTemplate C:\Windows\System32\pentestlab.exe
-# Namespace           ROOT\subscription
-# Computer            SECNOTES
-# Type                __EventConsumer
-# CreatorSid          S-1-5-21-1791094074-1363918840-4199337083-500
+# Type                : __EventConsumer
+# Name                : CommandLineEventConsumer.Name="PentestLab"
+# Namespace           : ROOT\subscription
+# ExecutablePath      : C:\Windows\System32\pentestlab.exe
+# CommandLineTemplate : C:\Windows\System32\pentestlab.exe
+# ComputerName        : SECNOTES
+# CreatorSid          : S-1-5-18
 
+# Type         : __EventFilter
+# Name         : __EventFilter.Name="PentestLab"
+# Namespace    : ROOT\subscription
+# Query        : SELECT * FROM __InstanceModificationEvent WITHIN 60 WHERE TargetInstance ISA 'Win32_PerfFormattedData_PerfOS_System'
+# ComputerName : SECNOTES
+# CreatorSid   : S-1-5-18
 
+# Type         : __FilterToConsumerBinding
+# Namespace    : ROOT\subscription
+# Consumer     : CommandLineEventConsumer.Name="PentestLab"
+# Filter       : __EventFilter.Name="PentestLab"
+# ComputerName : SECNOTES
+# CreatorSid   : S-1-5-18
 
-# Property            Value
-# --------            -----
-# Path                \\SECNOTES\ROOT\DEFAULT:CommandLineEventConsumer.Name="Persistence ftw"
-# CommandLineTemplate C:\Temp\nice.exe
-# Namespace           ROOT\DEFAULT
-# Computer            SECNOTES
-# Type                __EventConsumer
-# CreatorSid          S-1-5-21-1791094074-1363918840-4199337083-500
-
-
-
-# Property            Value
-# --------            -----
-# Path                \\SECNOTES\ROOT\DEFAULT:CommandLineEventConsumer.Name="PentestLab"
-# CommandLineTemplate C:\Windows\System32\pentestlab.exe
-# Namespace           ROOT\DEFAULT
-# Computer            SECNOTES
-# Type                __EventConsumer
-# CreatorSid          S-1-5-21-1791094074-1363918840-4199337083-500
-
-
-# *Evil-WinRM* PS C:\Users\Administrator\Documents>
+# PS C:\Users\Administrator\Documents>
